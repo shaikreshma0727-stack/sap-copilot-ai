@@ -1,0 +1,9 @@
+{
+  "name": "sap-copilot-abaplint",
+  "private": true,
+  "version": "1.0.0",
+  "description": "abaplint CLI used by the backend to syntax-check generated ABAP",
+  "dependencies": {
+    "@abaplint/cli": "^2.113.0"
+  }
+}

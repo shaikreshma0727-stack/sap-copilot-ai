@@ -1,0 +1,31 @@
+# Secrets - NEVER commit these
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.db
+
+# Node
+node_modules/
+dist/
+
+# Vector stores / data (added in later phases)
+knowledge_base/*.faiss
+knowledge_base/chroma/
+.DS_Store
+
+# More secrets and clutter
+.env.*
+!.env.example
+*.env.save
+*.bak
+.venv-old/
+
+# Downloaded sample repos (re-created by scripts/fetch_sources.sh)
+knowledge_base/raw/

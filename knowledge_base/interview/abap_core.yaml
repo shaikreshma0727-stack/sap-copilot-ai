@@ -1,0 +1,546 @@
+# Written from general ABAP knowledge - review before relying on it.
+- id: itab-types
+  topic: Internal tables
+  level: basic
+  question: What are the three kinds of internal tables in ABAP, and when do you use each?
+  key_points:
+    - text: Standard tables are accessed by index; key access is a linear search.
+      any: [standard, index+linear, linear search]
+    - text: Sorted tables are always kept sorted by their key; key access uses binary search.
+      any: [sorted, binary search]
+    - text: Hashed tables are accessed through a unique hash key in constant time; there is no index access.
+      any: [hashed, hash key, hash algorithm, constant time]
+    - text: The choice depends on the access pattern (index or key reads, size, uniqueness).
+      any: [access pattern, depends on, use case, large table, frequently read, lookup]
+  model_answer: >
+    Standard tables are index tables where key reads scan linearly (use them for appending and
+    looping). Sorted tables stay sorted by key, so key reads are binary searches. Hashed tables
+    use a unique hash key, so a key read takes constant time but there is no index access. Pick the
+    type by how the table is read: lookups on large tables favour hashed or sorted.
+
+- id: header-line
+  topic: Internal tables
+  level: basic
+  question: What is the difference between a header line and a work area, and which one should you use today?
+  key_points:
+    - text: A header line is an implicit work area that has the same name as the internal table.
+      any: [implicit, same name, header line is]
+    - text: A work area is a separate structure declared explicitly.
+      any: [explicit, separate structure, declared separately, work area is]
+    - text: Header lines (and OCCURS) are obsolete and not allowed in classes/OO contexts.
+      any: [obsolete, not allowed, not supported, outdated, oo context]
+    - text: Use a work area or inline declarations, for example LOOP AT ... INTO DATA(ls_row).
+      any: [inline, data(, use work area, work area instead]
+  model_answer: >
+    A header line is an implicit work area sharing the table's name; a work area is an explicitly
+    declared structure. Header lines and OCCURS are obsolete and not allowed in ABAP Objects, so use
+    work areas or inline declarations (LOOP AT itab INTO DATA(ls_row)) or field symbols.
+
+- id: itab-read-binary
+  topic: Internal tables
+  level: intermediate
+  question: How do you read a single line from an internal table efficiently, and what do you check afterwards?
+  key_points:
+    - text: READ TABLE ... WITH KEY (or WITH TABLE KEY) or a table expression itab[ ... ].
+      any: [read table, table expression, "itab[", line_exists]
+    - text: For standard tables, SORT first and use BINARY SEARCH; sorted and hashed tables search by key automatically.
+      any: [binary search, sort]
+    - text: Check sy-subrc (0 = found, 4 = not found).
+      any: [sy-subrc, subrc]
+    - text: A table expression raises CX_SY_ITAB_LINE_NOT_FOUND when nothing is found, unless you use line_exists or OPTIONAL/VALUE ... OPTIONAL.
+      any: [cx_sy_itab_line_not_found, line_exists, optional, exception]
+  model_answer: >
+    Use READ TABLE itab WITH KEY ... (add BINARY SEARCH only after SORT on a standard table) or a
+    table expression itab[ key = ... ]. After READ TABLE check sy-subrc; a table expression raises
+    CX_SY_ITAB_LINE_NOT_FOUND, which you avoid with line_exists( ) or a default via VALUE ... OPTIONAL.
+
+- id: itab-performance
+  topic: Internal tables
+  level: advanced
+  question: How do you avoid slow nested loops over two large internal tables?
+  key_points:
+    - text: Use a sorted or hashed table (or a secondary key) for the inner lookup.
+      any: [sorted, hashed, secondary key]
+    - text: Use the parallel cursor technique - sort both tables and continue from the last position.
+      any: [parallel cursor, from sy-tabix, from index]
+    - text: Use READ TABLE with BINARY SEARCH instead of an inner LOOP.
+      any: [binary search, read table]
+    - text: Use field symbols or references so rows are not copied.
+      any: [field symbol, assigning, reference]
+  model_answer: >
+    Replace the inner LOOP by a keyed read on a sorted/hashed table or secondary key, or use the
+    parallel cursor technique on two sorted tables. Use ASSIGNING field symbols to avoid copying rows.
+
+- id: field-symbols-refs
+  topic: Data handling
+  level: intermediate
+  question: What is the difference between field symbols and data references?
+  key_points:
+    - text: A field symbol is a placeholder that points to an existing memory area (ASSIGN); it does not own memory.
+      any: [placeholder, assign, alias, points to]
+    - text: A data reference (REF TO) is a pointer variable that holds an address; you dereference it with ->*.
+      any: [ref to, ->*, dereference, pointer]
+    - text: Field symbols must be assigned before use, or you get a runtime error (check IS ASSIGNED).
+      any: [is assigned, unassigned, not assigned, gets_unassigned]
+    - text: Both support generic and dynamic programming; ASSIGNING in LOOP avoids copying rows.
+      any: [generic, dynamic, loop, copy]
+  model_answer: >
+    A field symbol is a named placeholder for a memory area assigned with ASSIGN; accessing an
+    unassigned one dumps (check IS ASSIGNED). A data reference is an ordinary variable holding an
+    address, dereferenced with ->* and created with REF or NEW. Both enable generic code; field
+    symbols in LOOP ... ASSIGNING avoid copying.
+
+- id: select-fae
+  topic: Open SQL
+  level: intermediate
+  question: What must you watch out for when using SELECT ... FOR ALL ENTRIES?
+  key_points:
+    - text: If the driver table is empty, the WHERE condition is ignored and ALL rows are selected - check it is not empty first.
+      any: [empty, initial, all rows, all entries]
+    - text: Duplicate rows in the result are removed automatically, so select the key fields to keep distinct rows.
+      any: [duplicate, distinct, key field]
+    - text: Sort the driver table and delete adjacent duplicates to reduce the number of database requests.
+      any: [delete adjacent, sort, duplicates in driver]
+    - text: A join, subselect or CDS view is often better because FOR ALL ENTRIES is split into several statements.
+      any: [join, cds, subselect, alternative]
+  model_answer: >
+    Always check that the driver table is not empty (otherwise every row is read), include the key
+    fields because duplicates in the result are dropped, and remove duplicate driver entries first.
+    Consider a join or CDS view when the data can be combined in the database.
+
+- id: select-in-loop
+  topic: Open SQL
+  level: basic
+  question: Why is a SELECT inside a LOOP considered bad practice, and what do you do instead?
+  key_points:
+    - text: Each iteration is a separate database round trip, which is slow for many rows.
+      any: [round trip, roundtrip, each iteration, every iteration, database call, multiple database]
+    - text: Read the data once before the loop, with a join or FOR ALL ENTRIES, into an internal table.
+      any: [join, for all entries, before the loop, once]
+    - text: Then read from the internal table inside the loop (READ TABLE with a sorted or hashed table).
+      any: [read table, internal table, hashed, sorted]
+  model_answer: >
+    Every iteration costs a database round trip. Fetch everything once (join or FOR ALL ENTRIES)
+    into an internal table and use keyed reads from it inside the loop.
+
+- id: sql-new-syntax
+  topic: Open SQL
+  level: intermediate
+  question: What changed in ABAP SQL with ABAP 7.40 and later?
+  key_points:
+    - text: Host variables are prefixed with @ and lists are separated by commas.
+      any: ["@", host variable, comma]
+    - text: Inline declarations such as INTO TABLE @DATA(lt_result).
+      any: [inline, "@data", data(]
+    - text: Expressions in the select list, such as CASE, arithmetic, string functions and aggregates with aliases.
+      any: [case, expression, aggregate, alias, function]
+    - text: Joins and subqueries are more powerful, and you can use CTEs / UNION in newer releases.
+      any: [union, cte, subquery, join]
+  model_answer: >
+    The strict mode needs @-escaped host variables and comma-separated lists. You can declare targets
+    inline (INTO TABLE @DATA(lt)), use expressions (CASE, arithmetic, built-in functions, aggregates),
+    and newer releases add UNION, CTEs and more powerful joins.
+
+- id: table-buffering
+  topic: Open SQL
+  level: intermediate
+  question: What is table buffering, which tables are suitable, and when is the buffer bypassed?
+  key_points:
+    - text: Buffering keeps table data in the application server memory to avoid database access.
+      any: [application server, memory, avoid database, avoids database]
+    - text: Suitable for tables that are read often and changed rarely, such as customizing tables.
+      any: [read often, rarely changed, customizing, master data, seldom]
+    - text: The kinds are single-record, generic and full buffering.
+      any: [single record, generic, full buffer]
+    - text: BYPASSING BUFFER, SELECT FOR UPDATE, aggregates, native SQL and some joins bypass the buffer.
+      any: [bypassing buffer, for update, native sql, join]
+  model_answer: >
+    Buffering caches table data on the application server. Use it for rarely-changed, often-read tables
+    (customizing); modes are single record, generic and full. The buffer is bypassed with BYPASSING BUFFER,
+    FOR UPDATE, native SQL, and in many joins.
+
+- id: perf-tools
+  topic: Performance and debugging
+  level: intermediate
+  question: Which tools do you use to analyse and improve the performance of an ABAP program?
+  key_points:
+    - text: SAT (formerly SE30) runtime analysis to find slow parts of the code.
+      any: [sat, se30, runtime analysis]
+    - text: ST05 SQL trace to find expensive or repeated database statements.
+      any: [st05, sql trace]
+    - text: Code Inspector / ATC (SCI, ATC) for static checks such as SELECT in loops or missing WHERE.
+      any: [atc, sci, code inspector]
+    - text: The extended program check (SLIN) and ST12 / ST22 / SM50 for further analysis.
+      any: [slin, st12, st22, extended check, sm50]
+  model_answer: >
+    SAT for runtime analysis, ST05 for SQL trace, Code Inspector / ATC for static performance checks,
+    and SLIN or ST12 for further analysis. Start with the trace to find the slowest statement, fix
+    the biggest cost first and measure again.
+
+- id: debugging
+  topic: Performance and debugging
+  level: basic
+  question: How do you debug an ABAP program, and which kinds of breakpoints exist?
+  key_points:
+    - text: Type /h in the command field or set a breakpoint in the code (session breakpoint).
+      any: [/h, session breakpoint, set breakpoint]
+    - text: External breakpoints work for requests from outside, such as RFC, OData, background or HTTP.
+      any: [external, rfc, odata, http, background]
+    - text: Watchpoints stop when a variable gets a given value.
+      any: [watchpoint, variable value]
+    - text: The BREAK-POINT statement, ABAP debugger tools (variables, call stack, internal tables), and ST22 for dumps.
+      any: [break-point, call stack, st22, tools, statement]
+  model_answer: >
+    Use /h or set breakpoints in the editor (session or external, the latter for RFC/OData/HTTP), watchpoints
+    to stop on a value, and the debugger tools (call stack, tables, variables). Short dumps are analysed in ST22.
+
+- id: oo-basics
+  topic: ABAP Objects
+  level: basic
+  question: What are the four pillars of object-oriented programming and how do they appear in ABAP?
+  key_points:
+    - text: Encapsulation - visibility sections PUBLIC, PROTECTED, PRIVATE.
+      any: [encapsulation, private, protected, visibility]
+    - text: Inheritance - INHERITING FROM, with a single inheritance hierarchy.
+      any: [inheritance, inheriting from, subclass, superclass]
+    - text: Polymorphism - redefining methods and calling them through a reference of the superclass or interface type.
+      any: [polymorphism, redefin, interface reference]
+    - text: Abstraction - abstract classes and interfaces that define what, not how.
+      any: [abstraction, abstract, interface]
+  model_answer: >
+    Encapsulation through visibility sections, inheritance with INHERITING FROM (single inheritance),
+    polymorphism via REDEFINITION and superclass/interface references, and abstraction with abstract
+    classes and interfaces.
+
+- id: interface-vs-abstract
+  topic: ABAP Objects
+  level: intermediate
+  question: What is the difference between an interface and an abstract class in ABAP?
+  key_points:
+    - text: An interface only declares components and has no implementation; a class implements it.
+      any: [no implementation, only declar, implements, only definition]
+    - text: An abstract class can contain implemented methods and attributes as well as abstract methods.
+      any: [implemented method, abstract method, can have implementation, partly implemented]
+    - text: A class can implement many interfaces but inherit from only one superclass.
+      any: [multiple interface, single inheritance, only one superclass, many interface]
+    - text: An abstract class cannot be instantiated; subclasses must redefine abstract methods.
+      any: [cannot be instantiated, not instantiat, redefine, subclass must]
+  model_answer: >
+    An interface defines components without implementation and a class can implement many of them.
+    An abstract class can mix implemented and abstract methods but supports only single inheritance and
+    cannot be instantiated; concrete subclasses must redefine its abstract methods.
+
+- id: static-instance
+  topic: ABAP Objects
+  level: basic
+  question: What is the difference between static and instance components, and what are constructors used for?
+  key_points:
+    - text: Static components (CLASS-DATA, CLASS-METHODS) belong to the class and exist once.
+      any: [class-data, class-methods, belong to the class, shared by all, once]
+    - text: Instance components belong to an object and each object has its own copy.
+      any: [each object, own copy, per object, own attributes]
+    - text: The instance constructor runs on CREATE OBJECT / NEW; the static constructor runs once before first use.
+      any: [create object, instance constructor, static constructor, runs once, first use]
+    - text: Static methods are called with class=>method, instance methods with object->method.
+      any: [=>, ->]
+  model_answer: >
+    Static components exist once per class (CLASS-DATA, CLASS-METHODS, called with =>); instance components
+    exist per object (called with ->). The instance constructor initialises a new object; the static
+    constructor runs once before the class is first used.
+
+- id: oo-events
+  topic: ABAP Objects
+  level: intermediate
+  question: How do events work in ABAP Objects?
+  key_points:
+    - text: The sender class declares an EVENTS definition and triggers it with RAISE EVENT.
+      any: [raise event, events]
+    - text: A handler method is declared with FOR EVENT ... OF ....
+      any: [for event, handler method]
+    - text: The handler is registered at runtime with SET HANDLER.
+      any: [set handler, register]
+    - text: The sender does not know its receivers, so coupling is loose.
+      any: [loose coupling, decoupled, does not know, loosely]
+  model_answer: >
+    A class defines EVENTS and fires them with RAISE EVENT. Other classes define handler methods
+    (FOR EVENT x OF y) and register them with SET HANDLER. The sender knows nothing about the receivers.
+
+- id: exceptions
+  topic: ABAP Objects
+  level: intermediate
+  question: How does class-based exception handling work in ABAP?
+  key_points:
+    - text: Code that may fail goes into TRY ... CATCH ... ENDTRY.
+      any: [try, catch]
+    - text: Exceptions are classes inheriting from CX_STATIC_CHECK, CX_DYNAMIC_CHECK or CX_NO_CHECK.
+      any: [cx_static_check, cx_dynamic_check, cx_no_check, cx_root]
+    - text: Checked exceptions must be caught or declared with RAISING in the method signature.
+      any: [raising, declared, must be caught, checked]
+    - text: CLEANUP runs when an exception leaves the block, and RAISE EXCEPTION raises one yourself.
+      any: [cleanup, raise exception]
+  model_answer: >
+    Use TRY ... CATCH ... ENDTRY with exception classes derived from CX_STATIC_CHECK (must be handled or
+    declared with RAISING), CX_DYNAMIC_CHECK or CX_NO_CHECK. RAISE EXCEPTION throws one and CLEANUP runs
+    when an exception passes through.
+
+- id: abap-unit
+  topic: Testing
+  level: intermediate
+  question: How do you write unit tests in ABAP?
+  key_points:
+    - text: A local test class declared FOR TESTING, with RISK LEVEL and DURATION.
+      any: [for testing, risk level, duration]
+    - text: Test methods are also marked FOR TESTING and use CL_ABAP_UNIT_ASSERT for assertions.
+      any: [cl_abap_unit_assert, assert_equals, assert]
+    - text: SETUP and TEARDOWN methods prepare and clean up for each test.
+      any: [setup, teardown]
+    - text: Dependencies are replaced by test doubles, or the code is made testable with dependency injection or test seams.
+      any: [test double, mock, dependency injection, test seam, interface]
+  model_answer: >
+    Create a local class with FOR TESTING (RISK LEVEL, DURATION), mark methods FOR TESTING and use
+    CL_ABAP_UNIT_ASSERT. Use SETUP/TEARDOWN for fixtures and test doubles or test seams for dependencies.
+
+- id: userexit-badi
+  topic: Enhancements
+  level: intermediate
+  question: What are user exits, customer exits and BAdIs, and how do they differ?
+  key_points:
+    - text: User exits are modifications of SAP-delivered includes, for example in sales order processing (MV45AFZZ).
+      any: [mv45afzz, include, modification]
+    - text: Customer exits are function-module exits maintained with SMOD and activated in CMOD.
+      any: [smod, cmod, function exit, function module exit]
+    - text: BAdIs are object-oriented enhancement points with interfaces, defined in SE18 and implemented in SE19.
+      any: [se18, se19, interface, object oriented, object-oriented]
+    - text: BAdIs can have several implementations, filters, and are part of the enhancement framework (implicit/explicit enhancements).
+      any: [multiple implementation, filter, enhancement framework, enhancement spot, implicit, explicit]
+  model_answer: >
+    User exits change delivered includes (modification). Customer exits are function-module exits from SMOD
+    activated via CMOD. BAdIs are OO enhancement points (SE18/SE19) with interfaces, filters and multiple
+    implementations, within the enhancement framework that also offers implicit and explicit enhancements.
+
+- id: new-badi
+  topic: Enhancements
+  level: advanced
+  question: How is the new BAdI technology different from classic BAdIs?
+  key_points:
+    - text: New BAdIs are part of the enhancement framework (enhancement spots, SE18 for definition).
+      any: [enhancement spot, enhancement framework, spot]
+    - text: They are called with GET BADI and CALL BADI.
+      any: [get badi, call badi]
+    - text: They support filters and can allow multiple implementations, with a fallback implementation.
+      any: [filter, multiple use, fallback, several implementation]
+    - text: Switchable through the switch framework, so they can be activated per business function.
+      any: [switch framework, business function, switchable, sfw]
+  model_answer: >
+    New BAdIs belong to enhancement spots, are called with GET BADI / CALL BADI, support filters,
+    multiple use and fallback implementations, and can be switched on with the switch framework.
+
+- id: alv-options
+  topic: ALV and reporting
+  level: basic
+  question: Which ways are there to display an ALV grid in ABAP, and which one would you pick for a simple report?
+  key_points:
+    - text: Function modules REUSE_ALV_GRID_DISPLAY / REUSE_ALV_LIST_DISPLAY (classic).
+      any: [reuse_alv, function module]
+    - text: Class CL_GUI_ALV_GRID for full control with custom containers.
+      any: [cl_gui_alv_grid, custom container, container]
+    - text: CL_SALV_TABLE (SALV) is the simplest object-oriented option for most reports.
+      any: [cl_salv_table, salv]
+    - text: A field catalog and layout control columns and appearance; SALV derives them automatically from the table.
+      any: [field catalog, fieldcat, layout, automatic]
+  model_answer: >
+    Classic REUSE_ALV_GRID_DISPLAY, the container-based CL_GUI_ALV_GRID for full control, or CL_SALV_TABLE
+    which is simplest for normal reports and builds the field catalog itself. For a simple report pick SALV.
+
+- id: selection-screen
+  topic: ALV and reporting
+  level: basic
+  question: How do PARAMETERS and SELECT-OPTIONS differ, and what does a SELECT-OPTION contain?
+  key_points:
+    - text: PARAMETERS accepts one single value.
+      any: [single value, one value, only one value, one single]
+    - text: SELECT-OPTIONS accepts ranges and multiple selections.
+      any: [range, multiple selection, multiple values, multiple ranges]
+    - text: A select-option is an internal table with header fields SIGN, OPTION, LOW and HIGH.
+      any: [sign, low+high]
+    - text: It is used in the WHERE clause with IN.
+      any: [where+in, in s_]
+  model_answer: >
+    PARAMETERS takes one value. SELECT-OPTIONS creates a range table with SIGN, OPTION, LOW, HIGH that
+    allows intervals and several selections and is used with IN in the WHERE clause.
+
+- id: report-events
+  topic: ALV and reporting
+  level: basic
+  question: In which order are the classic report events processed?
+  key_points:
+    - text: LOAD-OF-PROGRAM when the program is loaded.
+      any: [load-of-program]
+    - text: INITIALIZATION before the selection screen appears.
+      any: [initialization]
+    - text: AT SELECTION-SCREEN (OUTPUT / validation) around the selection screen.
+      any: [at selection-screen, selection screen]
+    - text: START-OF-SELECTION for the main processing, then END-OF-SELECTION.
+      any: [start-of-selection, end-of-selection]
+  model_answer: >
+    LOAD-OF-PROGRAM, INITIALIZATION, AT SELECTION-SCREEN OUTPUT / AT SELECTION-SCREEN (validation),
+    START-OF-SELECTION, END-OF-SELECTION, and list events such as TOP-OF-PAGE during output.
+
+- id: ddic-domain-element
+  topic: Data Dictionary
+  level: basic
+  question: What is the difference between a domain and a data element?
+  key_points:
+    - text: A domain defines technical attributes - data type, length and decimals - and optionally value ranges or fixed values.
+      any: [technical, data type, length, value range, fixed value]
+    - text: A data element gives semantic meaning - field labels, documentation and the search help.
+      any: [semantic, field label, documentation, text, search help]
+    - text: Several data elements can share one domain.
+      any: [several data element, many data element, reuse, multiple data element, share]
+    - text: A table field refers to a data element (or a built-in type directly).
+      any: [table field, field refers, field uses]
+  model_answer: >
+    The domain holds technical attributes (type, length, value range); the data element adds meaning
+    (labels, documentation, search help) and refers to a domain. Many data elements may share a domain, and
+    table fields use data elements.
+
+- id: ddic-object-types
+  topic: Data Dictionary
+  level: basic
+  question: Which kinds of objects can you create in the ABAP Dictionary (SE11)?
+  key_points:
+    - text: Database tables (transparent tables) and structures.
+      any: [transparent table, database table, structure]
+    - text: Views - database views, projection views, maintenance views and help views.
+      any: [view]
+    - text: Data elements and domains, and table types.
+      any: [data element, domain, table type]
+    - text: Search helps and lock objects.
+      any: [search help, lock object]
+  model_answer: >
+    Transparent tables, structures, views (database, projection, maintenance, help), data elements, domains,
+    table types, search helps and lock objects.
+
+- id: ddic-foreign-key
+  topic: Data Dictionary
+  level: intermediate
+  question: What is a foreign key relationship, and what is a check table?
+  key_points:
+    - text: A foreign key links a field of one table to the key of another (the check table).
+      any: [link, key of another, key of the check, refers to]
+    - text: The check table holds the valid values, so input is validated against it.
+      any: [valid value, validate, input check, permitted values, holds the values]
+    - text: It is used for the input check on screens and the value help; it does not enforce integrity in the database itself.
+      any: [value help, screen, not enforced, application level, no database]
+    - text: Fields must have the same domain.
+      any: [same domain]
+  model_answer: >
+    A foreign key ties a field to the key of a check table that holds the allowed values. SAP uses it for
+    input checks and value help on screens; it is not a database constraint. The fields share a domain.
+
+- id: lock-objects
+  topic: Data Dictionary
+  level: intermediate
+  question: How do lock objects work in SAP?
+  key_points:
+    - text: A lock object is created in SE11 and generates ENQUEUE_ and DEQUEUE_ function modules.
+      any: [enqueue, dequeue, se11]
+    - text: The lock is held in the enqueue server's lock table (SM12 shows locks).
+      any: [sm12, lock table, enqueue server]
+    - text: Lock modes are shared (S), exclusive (E) and exclusive but not cumulative (X).
+      any: [shared, exclusive, mode]
+    - text: Locks are released with DEQUEUE or automatically at the end of the transaction/program.
+      any: [dequeue, released, end of transaction, end of the transaction, automatically]
+  model_answer: >
+    A lock object (SE11) generates ENQUEUE_<name> and DEQUEUE_<name> function modules. Locks live in the
+    enqueue server's lock table (SM12), have modes shared, exclusive and exclusive-not-cumulative, and are
+    released by DEQUEUE or at the end of the transaction.
+
+- id: sap-luw
+  topic: Transactions and updates
+  level: advanced
+  question: What is the difference between a database LUW and an SAP LUW, and how does update task work?
+  key_points:
+    - text: A database LUW is one database transaction ended by a database commit or rollback; it can end at a screen change.
+      any: [database commit, database rollback, db commit, screen change]
+    - text: An SAP LUW spans several dialog steps and is closed with COMMIT WORK or ROLLBACK WORK.
+      any: [several dialog, commit work, rollback work, spans]
+    - text: CALL FUNCTION ... IN UPDATE TASK registers an update function module that runs at COMMIT WORK.
+      any: [update function, update module, at commit work, update work process]
+    - text: Update modules run in an update work process, either synchronously or asynchronously (V1 / V2).
+      any: [v1, v2, asynchronous, update work process]
+  model_answer: >
+    A database LUW is a single database transaction; an SAP LUW bundles several dialog steps and is ended with
+    COMMIT WORK or ROLLBACK WORK. Update function modules registered IN UPDATE TASK run only at COMMIT WORK in an
+    update work process (V1 for critical, V2 for non-critical updates).
+
+- id: bapi-vs-rfc-idoc
+  topic: Integration
+  level: intermediate
+  question: What are the differences between a BAPI, an RFC function module and an IDoc?
+  key_points:
+    - text: A BAPI is a standardised, released, RFC-enabled function module that is a method of a business object (BOR, SWO1).
+      any: [business object, bor, swo1, released, standardised, standardized]
+    - text: An RFC function module is any function module marked remote-enabled, callable from other systems.
+      any: [remote-enabled, remote enabled, rfc]
+    - text: An IDoc is an asynchronous, document-like message with segments, used for data exchange (WE02, WE19, partner profile).
+      any: [segment, we02, we19, asynchronous, partner profile, message]
+    - text: BAPIs do not commit; the caller must call BAPI_TRANSACTION_COMMIT and read the RETURN parameter (BAPIRET2).
+      any: [bapi_transaction_commit, commit, bapiret2, return]
+  model_answer: >
+    A BAPI is a stable, released RFC-enabled function module exposing a business-object method; it does not
+    commit, so you call BAPI_TRANSACTION_COMMIT and read RETURN (BAPIRET2). Any RFC-enabled function module can
+    be called remotely. IDocs are asynchronous messages made of segments, configured with partner profiles and
+    monitored in WE02/WE05.
+
+- id: modularization
+  topic: Modularization
+  level: basic
+  question: Which modularization units does ABAP offer, and which ones are recommended today?
+  key_points:
+    - text: Includes, macros and subroutines (FORM) are older techniques.
+      any: [include, macro, subroutine, form]
+    - text: Function modules, grouped in function groups, can be RFC-enabled and have import, export, changing, tables and exception parameters.
+      any: [function module, function group, rfc]
+    - text: Methods of classes are the recommended unit in modern ABAP.
+      any: [method, class, recommended, object oriented, object-oriented]
+    - text: Subroutines are obsolete in new development; macros hurt readability and debugging.
+      any: [obsolete, discouraged, avoid, readability]
+  model_answer: >
+    Includes, macros, FORM subroutines, function modules (in function groups, RFC-capable) and methods. Use
+    methods in classes today; FORMs are obsolete and macros hide logic.
+
+- id: message-handling
+  topic: Messages and authorizations
+  level: basic
+  question: How do you send messages in ABAP, and what do the message types mean?
+  key_points:
+    - text: Messages come from message classes maintained in SE91 and are issued with MESSAGE.
+      any: [se91, message class, message statement]
+    - text: Types - S success, I information, W warning, E error, A abort, X exit with a dump.
+      any: [success, information, warning, error, abort]
+    - text: Error messages stop processing in reports and returns to the selection screen or the field; type A terminates the transaction.
+      any: [stops, terminate, back to, selection screen]
+    - text: Placeholders &1..&4 are filled with WITH, or use MESSAGE ... INTO to get the text into a string.
+      any: ["&1", message+with, message+into]
+  model_answer: >
+    Messages are defined in message classes (SE91) and sent with MESSAGE e001(zclass) WITH ... The types are S, I,
+    W, E, A and X. An E message in a report ends processing at that point, A cancels the transaction, X causes a
+    runtime error. MESSAGE ... INTO gets the text without displaying it.
+
+- id: authority-check
+  topic: Messages and authorizations
+  level: intermediate
+  question: How does an authorization check work in ABAP code?
+  key_points:
+    - text: AUTHORITY-CHECK OBJECT checks an authorization object against the user's profile.
+      any: [authority-check, authorization object]
+    - text: You pass field values with ID ... FIELD ..., for example ACTVT.
+      any: [id+field, actvt]
+    - text: sy-subrc = 0 means the user is authorised; any other value means no authorization.
+      any: [sy-subrc, subrc]
+    - text: Objects are maintained in SU21 and assigned to users through roles (PFCG).
+      any: [su21, pfcg, role]
+  model_answer: >
+    AUTHORITY-CHECK OBJECT 'M_BEST_EKG' ID 'ACTVT' FIELD '01' ... then test sy-subrc (0 = authorised). Objects
+    are defined in SU21 and granted via roles in PFCG; trace failures in SU53.

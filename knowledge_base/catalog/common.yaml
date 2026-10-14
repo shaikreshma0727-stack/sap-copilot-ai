@@ -1,0 +1,56 @@
+# Seed data written from general knowledge. ALL entries are unverified until checked in SE37 / SE11.
+- name: BAPIRET2
+  kind: structure
+  module: BC
+  description: Standard return structure of BAPIs (messages).
+  keywords: [bapi return, bapi return message, bapiret2]
+  status: unverified
+  source: ""
+  complete: true
+  fields:
+    - TYPE
+    - ID
+    - NUMBER
+    - MESSAGE
+    - LOG_NO
+    - LOG_MSG_NO
+    - MESSAGE_V1
+    - MESSAGE_V2
+    - MESSAGE_V3
+    - MESSAGE_V4
+    - PARAMETER
+    - ROW
+    - FIELD
+    - SYSTEM
+  notes: TYPE is the message type (S, W, E, I, A). The text is in MESSAGE.
+
+- name: BAPIRET2_T
+  kind: table_type
+  module: BC
+  description: Table type of BAPIRET2.
+  status: unverified
+  line_type: BAPIRET2
+
+- name: BAPI_TRANSACTION_COMMIT
+  kind: function_module
+  module: BC
+  description: Commits the database changes made by BAPI calls.
+  keywords: [bapi commit, commit bapi, commit work and wait]
+  status: unverified
+  source: ""
+  complete: true
+  params:
+    - {name: WAIT, direction: import, type: BAPITA-WAIT}
+    - {name: RETURN, direction: export, type: BAPIRET2}
+  notes: Call it after a successful BAPI that changes data. Pass WAIT = 'X' to wait for the update.
+
+- name: BAPI_TRANSACTION_ROLLBACK
+  kind: function_module
+  module: BC
+  description: Rolls back the changes of BAPI calls.
+  keywords: [bapi rollback, rollback bapi]
+  status: unverified
+  source: ""
+  complete: true
+  params:
+    - {name: RETURN, direction: export, type: BAPIRET2}

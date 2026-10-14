@@ -1,0 +1,105 @@
+# Seed data written from general knowledge. ALL entries are unverified until checked in SE37 / SE11.
+- name: BAPI_SALESORDER_CREATEFROMDAT2
+  kind: function_module
+  module: SD
+  description: Creates a sales order.
+  keywords: [sales order, create sales order, vbeln]
+  status: unverified
+  source: ""
+  complete: false
+  params:
+    - {name: ORDER_HEADER_IN, direction: import, type: BAPISDHD1}
+    - {name: ORDER_HEADER_INX, direction: import, type: BAPISDHD1X}
+    - {name: SALESDOCUMENT, direction: export}
+    - {name: RETURN, direction: tables, type: BAPIRET2}
+    - {name: ORDER_ITEMS_IN, direction: tables, type: BAPISDITM}
+    - {name: ORDER_ITEMS_INX, direction: tables, type: BAPISDITMX}
+    - {name: ORDER_PARTNERS, direction: tables, type: BAPIPARNR}
+    - {name: ORDER_SCHEDULES_IN, direction: tables, type: BAPISCHDL}
+    - {name: ORDER_SCHEDULES_INX, direction: tables, type: BAPISCHDLX}
+  notes: Follow with BAPI_TRANSACTION_COMMIT.
+
+- name: VBAK
+  kind: table
+  module: SD
+  description: Sales document header.
+  keywords: [sales order header table, sales document header]
+  status: unverified
+  source: ""
+  complete: false
+  fields:
+    - {name: MANDT, key: true}
+    - {name: VBELN, key: true}
+    - ERDAT
+    - ERNAM
+    - AUDAT
+    - VBTYP
+    - AUART
+    - VKORG
+    - VTWEG
+    - SPART
+    - NETWR
+    - WAERK
+    - KUNNR
+
+- name: KNA1
+  kind: table
+  module: SD
+  description: General customer master data.
+  keywords: [customer master table, customer general data]
+  status: unverified
+  source: ""
+  complete: false
+  fields:
+    - {name: MANDT, key: true}
+    - {name: KUNNR, key: true}
+    - LAND1
+    - NAME1
+    - ORT01
+    - PSTLZ
+    - REGIO
+    - STRAS
+    - TELF1
+    - KTOKD
+
+- name: LFA1
+  kind: table
+  module: MM
+  description: General vendor master data.
+  keywords: [vendor master table, supplier master table]
+  status: unverified
+  source: ""
+  complete: false
+  fields:
+    - {name: MANDT, key: true}
+    - {name: LIFNR, key: true}
+    - LAND1
+    - NAME1
+    - ORT01
+    - PSTLZ
+    - REGIO
+    - STRAS
+    - TELF1
+    - KTOKK
+
+- name: BKPF
+  kind: table
+  module: FI
+  description: Accounting document header.
+  keywords: [accounting document header, fi document header]
+  status: unverified
+  source: ""
+  complete: false
+  fields:
+    - {name: MANDT, key: true}
+    - {name: BUKRS, key: true}
+    - {name: BELNR, key: true}
+    - {name: GJAHR, key: true}
+    - BLART
+    - BLDAT
+    - BUDAT
+    - MONAT
+    - CPUDT
+    - USNAM
+    - WAERS
+    - XBLNR

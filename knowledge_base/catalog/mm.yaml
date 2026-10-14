@@ -1,0 +1,134 @@
+# Seed data written from general knowledge. ALL entries are unverified until checked in SE37 / SE11.
+- name: BAPI_PR_CREATE
+  kind: function_module
+  module: MM
+  description: Creates a purchase requisition.
+  keywords: [purchase requisition, create pr, create purchase requisition, banfn]
+  status: unverified
+  source: ""
+  complete: false   # more parameters exist in the real BAPI; only the common ones are listed
+  params:
+    - {name: PRHEADER, direction: import, type: BAPIMEREQHEADER}
+    - {name: PRHEADERX, direction: import, type: BAPIMEREQHEADERX}
+    - {name: TESTRUN, direction: import}
+    - {name: NUMBER, direction: export}
+    - {name: RETURN, direction: tables, type: BAPIRET2}
+    - {name: PRITEM, direction: tables, type: BAPIMEREQITEMIMP}
+    - {name: PRITEMX, direction: tables, type: BAPIMEREQITEMX}
+    - {name: PRACCOUNT, direction: tables, type: BAPIMEREQACCOUNT}
+    - {name: PRACCOUNTX, direction: tables, type: BAPIMEREQACCOUNTX}
+  notes: RETURN, PRITEM and PRITEMX are TABLES parameters - pass real internal tables. Follow with BAPI_TRANSACTION_COMMIT.
+
+- name: BAPI_PO_CREATE1
+  kind: function_module
+  module: MM
+  description: Creates a purchase order.
+  keywords: [purchase order, create po, create purchase order, ebeln]
+  status: unverified
+  source: ""
+  complete: false
+  params:
+    - {name: POHEADER, direction: import, type: BAPIMEPOHEADER}
+    - {name: POHEADERX, direction: import, type: BAPIMEPOHEADERX}
+    - {name: EXPPURCHASEORDER, direction: export}
+    - {name: RETURN, direction: tables, type: BAPIRET2}
+    - {name: POITEM, direction: tables, type: BAPIMEPOITEM}
+    - {name: POITEMX, direction: tables, type: BAPIMEPOITEMX}
+    - {name: POSCHEDULE, direction: tables, type: BAPIMEPOSCHEDULE}
+    - {name: POSCHEDULEX, direction: tables, type: BAPIMEPOSCHEDULX}
+  notes: Follow with BAPI_TRANSACTION_COMMIT.
+
+- name: EBAN
+  kind: table
+  module: MM
+  description: Purchase requisition items.
+  keywords: [purchase requisition table, pr items table]
+  status: unverified
+  source: ""
+  complete: false
+  fields:
+    - {name: MANDT, key: true}
+    - {name: BANFN, key: true}
+    - {name: BNFPO, key: true}
+    - BSART
+    - LOEKZ
+    - STATU
+    - MATNR
+    - WERKS
+    - LGORT
+    - MATKL
+    - TXZ01
+    - MENGE
+    - MEINS
+    - LFDAT
+    - EKGRP
+    - ERNAM
+    - BADAT
+
+- name: EKKO
+  kind: table
+  module: MM
+  description: Purchasing document header.
+  keywords: [purchase order header table, po header table]
+  status: unverified
+  source: ""
+  complete: false
+  fields:
+    - {name: MANDT, key: true}
+    - {name: EBELN, key: true}
+    - BUKRS
+    - BSTYP
+    - BSART
+    - LIFNR
+    - EKORG
+    - EKGRP
+    - BEDAT
+    - WAERS
+    - ERNAM
+    - AEDAT
+
+- name: EKPO
+  kind: table
+  module: MM
+  description: Purchasing document item.
+  keywords: [purchase order item table, po items table]
+  status: unverified
+  source: ""
+  complete: false
+  fields:
+    - {name: MANDT, key: true}
+    - {name: EBELN, key: true}
+    - {name: EBELP, key: true}
+    - LOEKZ
+    - MATNR
+    - TXZ01
+    - WERKS
+    - LGORT
+    - MATKL
+    - MENGE
+    - MEINS
+    - NETPR
+    - PEINH
+    - NETWR
+
+- name: MARA
+  kind: table
+  module: MM
+  description: General material data.
+  keywords: [material master table, general material data]
+  status: unverified
+  source: ""
+  complete: false
+  fields:
+    - {name: MANDT, key: true}
+    - {name: MATNR, key: true}
+    - ERSDA
+    - ERNAM
+    - LAEDA
+    - MTART
+    - MBRSH
+    - MATKL
+    - MEINS
+    - BRGEW
+    - NTGEW
+    - GEWEI

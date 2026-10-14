@@ -1,0 +1,19 @@
+[
+  {"query": "how do I look up a single row in an internal table by key", "expect_text_any": ["READ TABLE"]},
+  {"query": "grouping internal table rows by a column", "expect_text_any": ["GROUP BY"]},
+  {"query": "join two database tables in ABAP SQL", "expect_text_any": ["INNER JOIN"]},
+  {"query": "managed RAP business object with draft handling", "expect_text_any": ["with draft"]},
+  {"query": "define a CDS view entity with annotations", "expect_text_any": ["define view entity"]},
+  {"query": "write a unit test class for ABAP", "expect_text_any": ["FOR TESTING"]},
+  {"query": "create a data object dynamically at runtime", "expect_text_any": ["CREATE DATA"]},
+  {"query": "convert ABAP data to JSON", "expect_text_any": ["CALL TRANSFORMATION", "/ui2/cl_json"]},
+  {"query": "read RAP entity data using EML", "expect_text_any": ["READ ENTITIES"]},
+  {"query": "update task function module SAP LUW", "expect_text_any": ["IN UPDATE TASK"]},
+  {"query": "regular expression find and replace in strings", "expect_text_any": ["REGEX", "PCRE"]},
+  {"query": "authorization check in ABAP", "expect_text_any": ["AUTHORITY-CHECK"]},
+  {"query": "commit a RAP transaction with EML", "expect_text_any": ["COMMIT ENTITIES"]},
+  {"query": "get type information about a variable at runtime", "expect_text_any": ["cl_abap_typedescr"]},
+
+  {"query": "BAPI to create a purchase requisition", "expect_text_any": ["BAPI_PR_CREATE", "BAPI_REQUISITION_CREATE"], "needs_own_notes": true},
+  {"query": "which table stores purchase requisition items", "expect_text_any": ["EBAN"], "needs_own_notes": true}
+]

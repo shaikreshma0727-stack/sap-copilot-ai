@@ -1,0 +1,54 @@
+# Written from general ABAP knowledge - review before relying on it.
+- id: cds-basics
+  topic: CDS and RAP
+  level: intermediate
+  question: What is a CDS view and why is it used instead of plain database views or ABAP SQL joins?
+  key_points:
+    - text: A CDS view is defined with DDL (DEFINE VIEW ENTITY) and is a database-independent, code-pushdown data model.
+      any: [ddl, define view, view entity, code pushdown, push down, pushdown]
+    - text: Associations define relationships that are joined only when used.
+      any: [association]
+    - text: Annotations add semantics for UI, analytics and OData exposure.
+      any: [annotation]
+    - text: Access control (DCL) restricts data per user, and parameters and reusable layers (basic, composite, consumption) can be used.
+      any: [dcl, access control, parameter, consumption, composite, basic view]
+  model_answer: >
+    A CDS view is a DDL-defined data model that pushes logic to the database. It supports associations,
+    annotations (UI, analytics, OData), parameters and access control with DCL, and is layered into basic,
+    composite and consumption views.
+
+- id: rap-managed-unmanaged
+  topic: CDS and RAP
+  level: advanced
+  question: What is the ABAP RESTful Application Programming Model, and what is the difference between managed and unmanaged implementation?
+  key_points:
+    - text: RAP is the model for building OData services and Fiori apps in ABAP on top of CDS (data model, behavior, service).
+      any: [odata, fiori, service on top of cds, data model]
+    - text: Main artifacts - CDS data model, behavior definition (BDEF), behavior implementation class, service definition and service binding.
+      any: [behavior definition, bdef, service definition, service binding, behavior implementation]
+    - text: In a managed scenario the framework provides standard create, update, delete and the transactional buffer.
+      any: [framework provides, framework handles, standard operation, transactional buffer]
+    - text: In an unmanaged scenario you implement the CRUD handling yourself, for example when reusing existing code or BAPIs.
+      any: [implement yourself, you implement, existing code, bapi, legacy]
+  model_answer: >
+    RAP builds transactional OData services with CDS data models, a behavior definition and implementation,
+    and a service definition/binding. In managed scenarios the framework handles CRUD and the transactional
+    buffer; in unmanaged scenarios you code the persistence yourself, for instance wrapping existing BAPIs.
+
+- id: rap-determination-validation
+  topic: CDS and RAP
+  level: advanced
+  question: In RAP, what are determinations, validations and actions?
+  key_points:
+    - text: Determinations calculate or set values automatically when data changes or on save.
+      any: [calculate, derive, automatically set, sets values]
+    - text: Validations check data consistency and reject invalid changes with messages.
+      any: [reject, consistency, invalid, checks data]
+    - text: Actions are custom operations on instances, called by the consumer, such as approve or cancel.
+      any: [custom operation, approve, cancel, called by the consumer]
+    - text: They are declared in the behavior definition and implemented in the behavior implementation class (handler and saver classes).
+      any: [behavior definition, handler, saver, behavior implementation]
+  model_answer: >
+    Determinations compute or default values on change or save; validations verify consistency and raise
+    messages; actions are custom operations (for example approve). All are declared in the behavior definition
+    and implemented in handler methods of the behavior implementation class.
