@@ -1,0 +1,186 @@
+- id: time-out
+  title: "Dialog work process time limit exceeded (TIME_OUT)"
+  runtime_errors: [TIME_OUT]
+  phrases: ["time limit exceeded"]
+  causes:
+    - "A dialog program ran longer than profile parameter rdisp/max_wprun_time allows (default 600 s)."
+    - "A slow SELECT (no suitable index, no WHERE on key fields, SELECT inside a loop)."
+    - "A very large internal table processed with nested loops or repeated READ TABLE without a sorted/hashed key."
+  fix_steps:
+    - "In ST22 open the dump and read 'Information on where terminated' to find the statement that was running."
+    - "Check that SELECTs use key or indexed fields in WHERE and that there is no SELECT inside a LOOP (use FOR ALL ENTRIES or a JOIN)."
+    - "Use sorted or hashed internal tables for lookups instead of linear READ TABLE on big tables."
+    - "If the work is legitimately long, run it as a background job (SM36) instead of in dialog."
+  tcodes: [ST22, SE30, SAT, ST05, SM36]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: db-no-memory-itab
+  title: "No more memory for an internal table (TSV_TNEW_PAGE_ALLOC_FAILED)"
+  runtime_errors: [TSV_TNEW_PAGE_ALLOC_FAILED, TSV_TNEW_BLOCKS_NO_ROLL_MEMORY]
+  causes:
+    - "The program loaded too many rows into an internal table and the user session hit its memory limit."
+    - "A SELECT without a restrictive WHERE read a huge table completely."
+  fix_steps:
+    - "Find the internal table that grew in the dump (ST22, 'Information on where terminated')."
+    - "Restrict the SELECT, process in packages (PACKAGE SIZE with a cursor) and free tables you no longer need."
+    - "Only ask Basis to raise memory parameters after the program itself has been made leaner."
+  tcodes: [ST22, ST02, SM04, SE38]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: zerodivide
+  title: "Division by zero (COMPUTE_INT_ZERODIVIDE / CX_SY_ZERODIVIDE)"
+  runtime_errors: [COMPUTE_INT_ZERODIVIDE, BCD_ZERODIVIDE, COMPUTE_FLOAT_ZERODIVIDE]
+  exceptions: [CX_SY_ZERODIVIDE]
+  phrases: ["division by 0", "division by zero"]
+  causes:
+    - "The divisor was 0 at runtime, often because a quantity or amount field was empty or a SELECT found no row."
+  fix_steps:
+    - "Open the dump, go to the source line shown in 'Information on where terminated' and see which variable is the divisor."
+    - "Guard the division with IF divisor <> 0 or wrap it in TRY ... CATCH cx_sy_zerodivide."
+    - "Check why the divisor is 0: missing master data, a failed READ TABLE (sy-subrc) or an unfilled field."
+  tcodes: [ST22, SE80, SE38]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: convt-no-number
+  title: "Character value cannot be converted to a number (CONVT_NO_NUMBER)"
+  runtime_errors: [CONVT_NO_NUMBER]
+  exceptions: [CX_SY_CONVERSION_NO_NUMBER]
+  causes:
+    - "A text value with letters, spaces or a thousand separator was moved or compared with a number field."
+    - "Typical in file uploads: the column contains '1,234.50' or an empty string instead of a clean number."
+  fix_steps:
+    - "Find the failing statement in ST22 and check the exact value shown under 'Error analysis'."
+    - "Clean the value before the conversion (CONDENSE, REPLACE the separators) and validate with CATCH cx_sy_conversion_no_number."
+    - "For uploads, validate every line and report bad lines instead of letting the program dump."
+  tcodes: [ST22, SE38, SE80]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: getwa-not-assigned
+  title: "Field symbol used before it was assigned (GETWA_NOT_ASSIGNED)"
+  runtime_errors: [GETWA_NOT_ASSIGNED]
+  phrases: ["field symbol has not yet been assigned"]
+  causes:
+    - "A field symbol was accessed after a failed ASSIGN or READ TABLE ... ASSIGNING (nothing found), so it points to nothing."
+  fix_steps:
+    - "Check sy-subrc or use IS ASSIGNED before the field symbol is used."
+    - "In ST22 find the field symbol name and trace back to its ASSIGN or READ TABLE statement."
+  tcodes: [ST22, SE80]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: call-function-not-found
+  title: "Function module does not exist or is not active (CALL_FUNCTION_NOT_FOUND)"
+  runtime_errors: [CALL_FUNCTION_NOT_FOUND]
+  causes:
+    - "The function module name is misspelled or the module is missing in this system (not transported)."
+    - "The function group is not active, or a remote (RFC) destination points to a system without the module."
+  fix_steps:
+    - "Check the name in SE37 in this system; compare with the name in the dump."
+    - "If it exists elsewhere, check that the transport containing it reached this system (STMS, SE09)."
+    - "Activate the function group, or fix the RFC destination in SM59 if CALL FUNCTION ... DESTINATION was used."
+  tcodes: [ST22, SE37, SE80, STMS, SM59]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: load-program-not-found
+  title: "Program or include not found or not generated (LOAD_PROGRAM_NOT_FOUND / LOAD_PROGRAM_LOST)"
+  runtime_errors: [LOAD_PROGRAM_NOT_FOUND, LOAD_PROGRAM_LOST, LOAD_PROGRAM_CLASS_MISMATCH]
+  causes:
+    - "A transport was imported partly or in the wrong order, so the program or an include is missing or inconsistent."
+    - "The program was never activated or its generated load is out of date."
+  fix_steps:
+    - "Open the program in SE38/SE80, activate it and any inactive includes."
+    - "Check the transport logs (SE09, STMS) for errors with the objects involved."
+    - "Run the program again; if it still dumps, regenerate it (SGEN or re-activate) with Basis help."
+  tcodes: [ST22, SE38, SE80, SE09, STMS, SGEN]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: sql-error
+  title: "Database error in Open SQL (DBIF_RSQL_SQL_ERROR / CX_SY_OPEN_SQL_DB)"
+  runtime_errors: [DBIF_RSQL_SQL_ERROR, DBIF_RSQL_INVALID_RSQL, DBIF_RSQL_INVALID_CURSOR]
+  exceptions: [CX_SY_OPEN_SQL_DB, CX_SY_OPEN_SQL_ERROR]
+  causes:
+    - "The database rejected the statement: for example a statement too long (huge FOR ALL ENTRIES or IN list), a lost connection or a locked/inconsistent table."
+    - "A cursor was used after a commit or database rollback."
+  fix_steps:
+    - "Read the database error text and code under 'Error analysis' in ST22; it names the actual database problem."
+    - "Reduce the size of FOR ALL ENTRIES tables or split them in packages."
+    - "If the text points at the database itself (connection, space), involve Basis and check ST22 together with SM21 (system log)."
+  tcodes: [ST22, SM21, DB02, ST05]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: duplicate-key-insert
+  title: "Duplicate key on insert (SAPSQL_ARRAY_INSERT_DUPREC / DBIF_RSQL_..._DUPREC)"
+  runtime_errors: [SAPSQL_ARRAY_INSERT_DUPREC, DBIF_DSQL2_SQL_ERROR]
+  exceptions: [CX_SY_OPEN_SQL_DB]
+  phrases: ["duplicate key", "duplicate record", "unique constraint"]
+  causes:
+    - "INSERT ... FROM TABLE tried to write a row whose primary key already exists in the database table."
+    - "The internal table itself contains the same key twice."
+  fix_steps:
+    - "In ST22 find the table name and the INSERT statement."
+    - "Remove duplicates first (SORT then DELETE ADJACENT DUPLICATES COMPARING key fields) or use MODIFY if update is intended."
+    - "Add ACCEPTING DUPLICATE KEYS only if skipping duplicates is the wanted behaviour, and check sy-subrc afterwards."
+  tcodes: [ST22, SE11, SE16, SE38]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: message-type-x
+  title: "Program terminated by a type X message (MESSAGE_TYPE_X)"
+  runtime_errors: [MESSAGE_TYPE_X]
+  causes:
+    - "Code (SAP standard or custom) issued MESSAGE ... TYPE 'X' on purpose because it hit a state it treats as fatal."
+    - "The real reason is in the message text and the calling include, often inconsistent data or missing customizing."
+  fix_steps:
+    - "In ST22 read 'Short text' / 'Error analysis' for the actual message text, class and number."
+    - "Look at 'Information on where terminated' and the call stack to see which program raised it."
+    - "Search the SAP Support Portal for the message class/number or the program name; also check the data the program was working with."
+  tcodes: [ST22, SE91, SE80, SM21]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: raise-exception
+  title: "Unhandled exception (RAISE_EXCEPTION / UNCAUGHT_EXCEPTION)"
+  runtime_errors: [RAISE_EXCEPTION, UNCAUGHT_EXCEPTION]
+  causes:
+    - "A function module or method raised an exception that the caller did not handle (no EXCEPTIONS list, no CATCH)."
+  fix_steps:
+    - "In ST22 note the exception name and the function module or class that raised it."
+    - "Handle it: add the exception to the EXCEPTIONS list and check sy-subrc, or wrap the call in TRY ... CATCH."
+    - "Then fix the root cause the exception reports (wrong parameter, missing data)."
+  tcodes: [ST22, SE37, SE24, SE80]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: itab-index
+  title: "Internal table row index out of range (ITAB_ILLEGAL_... / CX_SY_ITAB_LINE_NOT_FOUND)"
+  runtime_errors: [ITAB_ILLEGAL_INDEX, ITAB_LINE_NOT_FOUND]
+  exceptions: [CX_SY_ITAB_LINE_NOT_FOUND, CX_SY_ITAB_ERROR]
+  causes:
+    - "A table expression like itab[ key = x ] found no row (it raises an exception, unlike READ TABLE which sets sy-subrc)."
+    - "An index beyond the number of rows was used."
+  fix_steps:
+    - "Use line_exists( itab[ ... ] ) first, or READ TABLE and check sy-subrc, or use the OPTIONAL / DEFAULT addition of VALUE #( ... OPTIONAL )."
+    - "Check why the expected row is missing (earlier SELECT returned nothing, filter too strict)."
+  tcodes: [ST22, SE80]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: dynpro-background
+  title: "Screen in background job (DYNPRO_SEND_IN_BACKGROUND)"
+  runtime_errors: [DYNPRO_SEND_IN_BACKGROUND]
+  causes:
+    - "A program or a called function module tried to show a screen, popup or interactive message while running in a background job."
+  fix_steps:
+    - "Find what tries to display a screen (a POPUP function, a type I/W/E message, CALL SCREEN) in the call stack."
+    - "Replace dialogs by application-log or spool output when sy-batch = 'X'; check the message type used in background."
+    - "Check the job log in SM37 for the last messages before the dump."
+  tcodes: [ST22, SM37, SLG1]
+  status: unverified
+  source: "general knowledge - review before relying on it"

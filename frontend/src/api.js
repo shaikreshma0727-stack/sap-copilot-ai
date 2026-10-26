@@ -74,3 +74,15 @@ export function submitInterviewAnswer(questionId, answer, token) {
 export function getInterviewProgress(token) {
   return request("/interview/progress", {}, token);
 }
+
+export function analyzeError(text, token) {
+  return request(
+    "/errors/analyze",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    },
+    token
+  );
+}

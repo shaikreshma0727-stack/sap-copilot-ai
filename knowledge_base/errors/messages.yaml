@@ -1,0 +1,109 @@
+- id: no-authorization
+  title: "Missing authorization"
+  phrases: ["no authorization", "you are not authorized", "not authorized for"]
+  causes:
+    - "The user's role lacks an authorization object, field value or activity the transaction or program checks."
+  fix_steps:
+    - "Right after the error, run SU53 as the affected user: it shows the failed authorization check and the missing values."
+    - "Give the values to the security team to add to the role (PFCG), or compare with SU24 proposals for the transaction."
+    - "After the role change, check that the user got the new profile (SU01, then user comparison in PFCG)."
+  tcodes: [SU53, SU01, PFCG, SU24, ST01]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: locked-by-user
+  title: "Object or document locked by another user"
+  phrases: ["is locked by user", "locked by user", "currently being processed by"]
+  causes:
+    - "Another user or a background process holds an enqueue (lock) on the same object."
+    - "A previous session or terminated update left a stale lock."
+  fix_steps:
+    - "Check the lock list in SM12 using the object or the user named in the message."
+    - "Ask the lock owner to finish or close the session. Delete a lock only when you are sure nothing is still using it."
+    - "If locks keep coming back, look for a terminated update in SM13 or a job that never ends in SM37."
+  tcodes: [SM12, SM13, SM04, SM37]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: update-terminated
+  title: "Update was terminated"
+  phrases: ["update was terminated", "update terminated"]
+  causes:
+    - "The asynchronous update task (V1/V2) failed after the dialog step had already ended; the document was not saved."
+    - "Common reasons: a dump in an update function module, a database error or a lock/number problem."
+  fix_steps:
+    - "Open SM13 and look at the terminated update request and its error text."
+    - "Also check ST22 for a dump at the same time; the cause is usually there."
+    - "Fix the cause, then re-process the update request from SM13 only if the business agrees it is safe."
+  tcodes: [SM13, ST22, SM21]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: number-range
+  title: "Number range problem"
+  phrases: ["number range", "interval does not exist", "number range object"]
+  causes:
+    - "The number range interval for the object does not exist, is exhausted or is not set for the year/company code used."
+    - "The program asked a number range object (NUMBER_GET_NEXT) that was never created in this system."
+  fix_steps:
+    - "Find the number range object named in the message and open it in SNRO."
+    - "Check the intervals (and the 'to year' / subobject) and create or extend the interval; for document types use the number range screen of the module (for example OBA7 for FI)."
+    - "In a project, make sure the number range is created in each system or transported."
+  tcodes: [SNRO, SNUM, OBA7]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: posting-period
+  title: "Posting period not open"
+  phrases: ["posting period", "period is not open", "not open for posting"]
+  causes:
+    - "The posting date falls in a period that is closed for the account type, variant or company code."
+  fix_steps:
+    - "Check the posting date in the document and compare it with the open periods."
+    - "FI/CO owners open the period (OB52 for FI, OMSY for material periods); do not change this yourself in a productive system."
+  tcodes: [OB52, OMSY, MMPV]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: object-not-exist
+  title: "Master data or document does not exist"
+  phrases: ["does not exist", "has not been created"]
+  causes:
+    - "The material, vendor, customer, plant or document number is wrong, not created yet, or not extended to the organizational level used (plant, sales org, company code)."
+    - "Leading zeros are missing (for example a vendor or material number needs the internal format)."
+  fix_steps:
+    - "Display the object with its display transaction (MM03 material, XK03 or BP vendor, XD03 or BP customer) at the organizational level from the message."
+    - "If it exists, check the extension to the plant / sales area / company code, and conversion exits (leading zeros)."
+    - "In upload programs, validate with the same master-data table before posting."
+  tcodes: [MM03, BP, XK03, XD03, SE16]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: transport-error
+  title: "Transport import ended with errors"
+  phrases: ["import ended with errors", "return code 8", "return code 12"]
+  causes:
+    - "Objects in the request are inactive or syntactically wrong in the target system."
+    - "A required object or earlier request is missing in the target (wrong order)."
+    - "The request is locked by another import or the system is not set up for the import."
+  fix_steps:
+    - "Open the import log in STMS (or SE09 for the request) and read the first real error, not the last return code."
+    - "Fix the object in the source system and release a new request, or import the missing prerequisite request first."
+    - "Return code 8 is usually a warning/error in activation; 12 or higher is a serious import error. Check with Basis if the log is unclear."
+  tcodes: [STMS, SE09, SE10, SE80]
+  status: unverified
+  source: "general knowledge - review before relying on it"
+
+- id: rfc-connection
+  title: "RFC / destination connection failed"
+  phrases: ["rfc_communication_failure", "communication failure", "connection to partner"]
+  causes:
+    - "The target system is down or not reachable, or the destination definition (host, system number, user) is wrong."
+    - "The logon user of the destination is locked, has the wrong password or lacks RFC authorization."
+  fix_steps:
+    - "Open the destination in SM59 and run the connection test and the authorization test."
+    - "Check the system log (SM21) and the developer trace of the work process for the real network or logon error."
+    - "Ask the owner of the remote system whether it is up and whether the technical user is valid."
+  tcodes: [SM59, SM21, ST22]
+  status: unverified
+  source: "general knowledge - review before relying on it"

@@ -188,3 +188,13 @@ python -m app.interview.cli list
 - Never put keys in the frontend (`VITE_*` values are public).
 - Do not put employer or client code, specifications or data in `knowledge_base/` (notes, catalog, interview questions).
 - If a key was ever pasted somewhere public, rotate it.
+
+
+## Phase 6: Error analyzer
+
+Paste an ST22 short dump or an SAP error message in the "Error analyzer" tab. The backend (1) parses the facts that
+are literally in the text (runtime error, exception, program, line, message class/number), (2) matches them against
+`knowledge_base/errors/*.yaml` (causes, fix steps, transactions to check; every entry has a status, shipped ones are
+`unverified`), and (3) asks the LLM for an explanation based only on those facts. Without an LLM key you still get
+(1) and (2). Limits: the explanation can be wrong, and the knowledge entries are general SAP knowledge that you
+should review. Do not paste confidential customer data.

@@ -201,3 +201,13 @@ textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
 .coach-progress th, .coach-progress td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
 .coach-progress th { background: #f0f3f9; white-space: nowrap; }
 .coach > * { flex-shrink: 0; }
+
+/* ---------- Error analyzer ---------- */
+.facts { border-collapse: collapse; width: 100%; }
+.facts th { text-align: left; width: 160px; padding: 4px 10px 4px 0; color: #55607a; font-weight: 600; vertical-align: top; }
+.facts td { padding: 4px 0; word-break: break-word; }
+.err-match { border-top: 1px solid var(--border); padding: 10px 0; }
+.err-match summary { cursor: pointer; font-weight: 600; }
+.err-match h4 { margin: 10px 0 4px; }
+.err-match ul, .err-match ol { margin: 0; padding-left: 22px; }
+.tcode { background: #eef2fa; border-radius: 6px; padding: 1px 7px; margin-right: 6px; font-size: 0.85rem; }

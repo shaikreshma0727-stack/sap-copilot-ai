@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getHistory, login, register, sendMessage } from "./api.js";
+import ErrorAnalyzer from "./ErrorAnalyzer.jsx";
 import InterviewCoach from "./InterviewCoach.jsx";
 import Markdown from "./Markdown.jsx";
 
@@ -111,6 +112,7 @@ function Chat({ token, onLogout, onNavigate }) {
         <span className="nav">
           <button className="link active">Chat</button>
           <button className="link" onClick={() => onNavigate("coach")}>Interview coach</button>
+          <button className="link" onClick={() => onNavigate("errors")}>Error analyzer</button>
           <button className="link" onClick={onLogout}>Log out</button>
         </span>
       </header>
@@ -156,9 +158,7 @@ export default function App() {
   }
 
   if (!token) return <AuthForm onLoggedIn={handleLogin} />;
-  return view === "coach" ? (
-    <InterviewCoach token={token} onLogout={handleLogout} onNavigate={setView} />
-  ) : (
-    <Chat token={token} onLogout={handleLogout} onNavigate={setView} />
-  );
+  if (view === "coach") return <InterviewCoach token={token} onLogout={handleLogout} onNavigate={setView} />;
+  if (view === "errors") return <ErrorAnalyzer token={token} onLogout={handleLogout} onNavigate={setView} />;
+  return <Chat token={token} onLogout={handleLogout} onNavigate={setView} />;
 }

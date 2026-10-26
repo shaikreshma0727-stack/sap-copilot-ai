@@ -35,6 +35,8 @@ class Settings(BaseSettings):
 
     # Interview coach: question bank folder. Empty = <kb_dir>/interview.
     interview_dir: str = ""
+    # Error analyzer: knowledge folder. Empty = <kb_dir>/errors.
+    errors_dir: str = ""
 
 
 @lru_cache
