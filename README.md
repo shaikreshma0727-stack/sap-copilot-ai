@@ -10,7 +10,7 @@ It is a personal portfolio project built by an SAP ABAP developer. It does **not
 
 ## Screenshots
 
-| Chat with sources and syntax check | Interview coach | Error analyzer |
+| Chat with syntax and catalog checks | Interview coach | Error analyzer |
 |---|---|---|
 | ![Chat](docs/screenshots/chat.png) | ![Interview coach](docs/screenshots/interview.png) | ![Error analyzer](docs/screenshots/errors.png) |
 
