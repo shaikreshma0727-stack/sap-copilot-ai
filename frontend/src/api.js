@@ -86,3 +86,15 @@ export function analyzeError(text, token) {
     token
   );
 }
+
+export function generateSpec(fsText, token) {
+  return request(
+    "/spec/generate",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fs_text: fsText }),
+    },
+    token
+  );
+}

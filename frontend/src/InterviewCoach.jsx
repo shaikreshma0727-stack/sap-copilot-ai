@@ -158,6 +158,7 @@ export default function InterviewCoach({ token, onLogout, onNavigate }) {
           <button className="link" onClick={() => onNavigate("chat")}>Chat</button>
           <button className="link active">Interview coach</button>
           <button className="link" onClick={() => onNavigate("errors")}>Error analyzer</button>
+          <button className="link" onClick={() => onNavigate("spec")}>FS to TS</button>
           <button className="link" onClick={onLogout}>Log out</button>
         </span>
       </header>

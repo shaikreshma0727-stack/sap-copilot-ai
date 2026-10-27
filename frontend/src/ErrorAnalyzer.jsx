@@ -93,6 +93,7 @@ export default function ErrorAnalyzer({ token, onLogout, onNavigate }) {
           <button className="link" onClick={() => onNavigate("chat")}>Chat</button>
           <button className="link" onClick={() => onNavigate("coach")}>Interview coach</button>
           <button className="link active">Error analyzer</button>
+          <button className="link" onClick={() => onNavigate("spec")}>FS to TS</button>
           <button className="link" onClick={onLogout}>Log out</button>
         </span>
       </header>
