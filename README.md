@@ -93,6 +93,8 @@ cp .env.example .env     # set JWT_SECRET and optionally GROQ_API_KEY
 docker compose up --build
 ```
 
+The Postgres password in `docker-compose.yml` is a local development value. Change it before running anywhere that is reachable from the internet.
+
 ## Tests
 
 ```bash
@@ -108,7 +110,7 @@ frontend build on every push.
 | Variable | Purpose |
 |---|---|
 | `DATABASE_URL` | SQLite locally, PostgreSQL for Docker / hosting |
-| `JWT_SECRET` | Long random string. Never commit it |
+| `JWT_SECRET` | Long random string (at least 32 characters). The server refuses to start with a placeholder or a short value. Never commit it |
 | `GROQ_API_KEY` / `GROQ_MODEL` | LLM access (optional) |
 | `FRONTEND_ORIGIN` | Allowed CORS origin, default `http://localhost:5173` |
 | `RAG_ENABLED`, `EMBEDDING_BACKEND`, `KB_DIR` | Knowledge base search |

@@ -42,3 +42,16 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+WEAK_JWT_SECRETS = {"", "change-me", "change-me-generate-a-long-random-string"}
+
+
+def validate_jwt_secret(secret: str) -> None:
+    """Refuse to run with a secret that is a placeholder or too short: tokens could be forged."""
+    if secret in WEAK_JWT_SECRETS or len(secret) < 32:
+        raise RuntimeError(
+            "JWT_SECRET is missing, a placeholder or shorter than 32 characters. "
+            'Generate one with: python -c "import secrets; print(secrets.token_hex(32))" '
+            "and put it in backend/.env as JWT_SECRET=..."
+        )

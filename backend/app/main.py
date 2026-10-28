@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import models  # noqa: F401  (registers tables)
-from app.config import get_settings
+from app.config import get_settings, validate_jwt_secret
 from app.database import Base, engine
 from app.routers import auth, catalog, chat, errors, interview, kb, review, spec
 
@@ -14,6 +14,7 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Phase 1: create tables on startup. Later we switch to Alembic migrations.
+    validate_jwt_secret(get_settings().jwt_secret)
     Base.metadata.create_all(bind=engine)
     yield
 
