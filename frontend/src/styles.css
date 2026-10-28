@@ -211,3 +211,12 @@ textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
 .err-match h4 { margin: 10px 0 4px; }
 .err-match ul, .err-match ol { margin: 0; padding-left: 22px; }
 .tcode { background: #eef2fa; border-radius: 6px; padding: 1px 7px; margin-right: 6px; font-size: 0.85rem; }
+
+/* ---------- Code review ---------- */
+.code-input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88rem; line-height: 1.45; white-space: pre; overflow: auto; }
+.sev { display: inline-block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 1px 8px; border-radius: 10px; margin-right: 6px; color: #fff; }
+.sev-high { background: #c0392b; }
+.sev-medium { background: #d68910; }
+.sev-low { background: #5d6d7e; }
+.sev-info { background: #2e86c1; }
+.snippet { background: #1e2230; color: #e6e9f2; border-radius: 8px; padding: 8px 12px; overflow: auto; font-size: 0.85rem; margin: 8px 0; }

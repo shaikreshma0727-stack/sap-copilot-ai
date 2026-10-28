@@ -25,6 +25,7 @@ It is a personal portfolio project built by an SAP ABAP developer. It does **not
 | **Interview coach** | 34 ABAP / CDS / RAP questions by topic and level, scored by the share of expected key points covered, with feedback and progress per topic. | The score is explicitly "key points covered", not a grade of overall quality. |
 | **Error analyzer** | Paste an ST22 dump or an error message: parsed facts, matching known errors (causes, fix steps, tcodes) and an AI explanation. | Parsing only reports what is literally in the text. The AI is told to say what extra information it needs instead of guessing. |
 | **FS to TS** | Paste a functional spec: which topics it mentions and which it does not (with the question to ask), SAP objects found, and an AI draft of the technical spec. | The topic check is a fixed keyword checklist. The draft must list what the FS does not say under "Open questions" instead of inventing tables or fields. |
+| **Code review** | Paste ABAP: findings with line numbers (SELECT in a loop, FOR ALL ENTRIES without an empty check, missing sy-subrc checks, obsolete statements, ...), an abaplint syntax check and an AI review. | The rules are text patterns and can be wrong; the AI is told to say what it could not judge. It does not replace ATC / Code Inspector. |
 
 ## Architecture
 
@@ -98,7 +99,7 @@ docker compose up --build
 cd backend && source .venv/bin/activate
 python -m pytest -q
 ```
-About 130 tests cover the API, auth, chunker, retrieval, abaplint integration, catalog, interview coach, error analyzer and FS to TS.
+About 145 tests cover the API, auth, chunker, retrieval, abaplint integration, catalog, interview coach, error analyzer, FS to TS and code review.
 They run offline (a hash embedder replaces the model download, the LLM is stubbed). GitHub Actions runs the backend tests and the
 frontend build on every push.
 
@@ -129,6 +130,7 @@ frontend build on every push.
 | POST | `/errors/analyze` | `{"text": "..."}` returns parsed facts, matches, explanation |
 | GET | `/errors/coverage` | which runtime errors the knowledge base knows |
 | POST | `/spec/generate` | `{"fs_text": "..."}` returns topic check, detected objects and a TS draft |
+| POST | `/review/code` | `{"code": "..."}` returns rule findings, syntax issues and an AI review |
 
 All endpoints except `/health` and `/auth/*` need `Authorization: Bearer <token>`.
 
@@ -164,6 +166,5 @@ Write entries in your own words from what you have verified; do not paste client
 
 ## Roadmap
 
-- Code review mode (performance, clean ABAP, S/4HANA readiness)
 - Verified catalog entries and sources, more interview and error entries written from real experience
 - Deployment (Docker image with frontend, hosted database)

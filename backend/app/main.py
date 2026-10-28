@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import models  # noqa: F401  (registers tables)
 from app.config import get_settings
 from app.database import Base, engine
-from app.routers import auth, catalog, chat, errors, interview, kb, spec
+from app.routers import auth, catalog, chat, errors, interview, kb, review, spec
 
 settings = get_settings()
 
@@ -35,6 +35,7 @@ app.include_router(catalog.router)
 app.include_router(interview.router)
 app.include_router(errors.router)
 app.include_router(spec.router)
+app.include_router(review.router)
 
 
 @app.get("/health", tags=["system"])

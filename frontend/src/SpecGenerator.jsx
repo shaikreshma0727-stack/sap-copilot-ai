@@ -96,6 +96,7 @@ export default function SpecGenerator({ token, onLogout, onNavigate }) {
           <button className="link" onClick={() => onNavigate("coach")}>Interview coach</button>
           <button className="link" onClick={() => onNavigate("errors")}>Error analyzer</button>
           <button className="link active">FS to TS</button>
+          <button className="link" onClick={() => onNavigate("review")}>Code review</button>
           <button className="link" onClick={onLogout}>Log out</button>
         </span>
       </header>

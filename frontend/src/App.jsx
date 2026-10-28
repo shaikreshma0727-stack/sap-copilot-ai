@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getHistory, login, register, sendMessage } from "./api.js";
+import CodeReview from "./CodeReview.jsx";
 import ErrorAnalyzer from "./ErrorAnalyzer.jsx";
 import SpecGenerator from "./SpecGenerator.jsx";
 import InterviewCoach from "./InterviewCoach.jsx";
@@ -115,6 +116,7 @@ function Chat({ token, onLogout, onNavigate }) {
           <button className="link" onClick={() => onNavigate("coach")}>Interview coach</button>
           <button className="link" onClick={() => onNavigate("errors")}>Error analyzer</button>
           <button className="link" onClick={() => onNavigate("spec")}>FS to TS</button>
+          <button className="link" onClick={() => onNavigate("review")}>Code review</button>
           <button className="link" onClick={onLogout}>Log out</button>
         </span>
       </header>
@@ -163,5 +165,6 @@ export default function App() {
   if (view === "coach") return <InterviewCoach token={token} onLogout={handleLogout} onNavigate={setView} />;
   if (view === "errors") return <ErrorAnalyzer token={token} onLogout={handleLogout} onNavigate={setView} />;
   if (view === "spec") return <SpecGenerator token={token} onLogout={handleLogout} onNavigate={setView} />;
+  if (view === "review") return <CodeReview token={token} onLogout={handleLogout} onNavigate={setView} />;
   return <Chat token={token} onLogout={handleLogout} onNavigate={setView} />;
 }

@@ -98,3 +98,15 @@ export function generateSpec(fsText, token) {
     token
   );
 }
+
+export function reviewCode(code, token) {
+  return request(
+    "/review/code",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    },
+    token
+  );
+}
