@@ -14,6 +14,10 @@ It is a personal portfolio project built by an SAP ABAP developer. It does **not
 |---|---|---|
 | ![Chat](docs/screenshots/chat.png) | ![Interview coach](docs/screenshots/interview.png) | ![Error analyzer](docs/screenshots/errors.png) |
 
+| FS to TS generator | Code review |
+|---|---|
+| ![FS to TS](docs/screenshots/spec.png) | ![Code review](docs/screenshots/review.png) |
+
 ## What it does
 
 | Feature | What you get | How it stays honest |
