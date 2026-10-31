@@ -99,6 +99,30 @@ docker compose up --build
 
 The Postgres password in `docker-compose.yml` is a local development value. Change it before running anywhere that is reachable from the internet.
 
+## Deploy (free-tier demo)
+
+The demo setup uses three free services: **Neon** (PostgreSQL), **Render** (backend container) and a static host for the
+frontend (Netlify or Vercel). `render.yaml` describes the backend; `backend/Dockerfile` builds a slim image.
+
+| Part | Where | Notes |
+|---|---|---|
+| Database | Neon free project | Use the connection string as `DATABASE_URL` (`postgres://...` is accepted). |
+| Backend | Render web service from `render.yaml` | Set `DATABASE_URL`, `GROQ_API_KEY`, `FRONTEND_ORIGIN` in the dashboard. `JWT_SECRET` is generated for you. |
+| Frontend | Netlify / Vercel | Root directory `frontend`, build `npm run build`, output `dist`, env `VITE_API_URL` = the Render URL. |
+
+What the hosted demo does differently, on purpose:
+
+- Knowledge-base search (RAG) and the abaplint syntax check are switched off (`RAG_ENABLED=false`, `ABAPLINT_ENABLED=false`) to fit a 512 MB free instance. Everything else works.
+- AI calls are limited per user and per day (`AI_LIMIT_PER_HOUR`, `AI_LIMIT_PER_DAY`). The limits are kept in memory and reset when the server restarts. When a limit is reached the answer says so and the rule-based parts still work.
+- Everyone shares one Groq API key and its rate limits. Free hosting sleeps when idle: the first request after a pause can take up to a minute (the login page shows a notice).
+- Chats and interview answers are stored in the demo database. Do not enter confidential or client data.
+
+Build the image locally (context is the repository root):
+
+```bash
+docker build -f backend/Dockerfile -t sap-copilot-ai .
+```
+
 ## Tests
 
 ```bash
@@ -116,7 +140,8 @@ frontend build on every push.
 | `DATABASE_URL` | SQLite locally, PostgreSQL for Docker / hosting |
 | `JWT_SECRET` | Long random string (at least 32 characters). The server refuses to start with a placeholder or a short value. Never commit it |
 | `GROQ_API_KEY` / `GROQ_MODEL` | LLM access (optional) |
-| `FRONTEND_ORIGIN` | Allowed CORS origin, default `http://localhost:5173` |
+| `FRONTEND_ORIGIN` | Allowed CORS origin(s), comma separated, default `http://localhost:5173` |
+| `AI_LIMIT_PER_HOUR`, `AI_LIMIT_PER_DAY` | Optional usage limits for AI requests: per user per hour, and for the whole server per UTC day. `0` = no limit |
 | `RAG_ENABLED`, `EMBEDDING_BACKEND`, `KB_DIR` | Knowledge base search |
 | `ABAPLINT_ENABLED`, `ABAPLINT_MAX_FIXES` | Syntax check loop |
 | `CATALOG_ENABLED`, `CATALOG_DIR`, `INTERVIEW_DIR`, `ERRORS_DIR` | Locations of the YAML knowledge files |
@@ -167,10 +192,10 @@ Write entries in your own words from what you have verified; do not paste client
 - abaplint checks syntax, not whether objects exist. LLM-generated BAPI parameter or field names can still be invented, even after the catalog check (the catalog covers only a small set of objects).
 - The AI can be wrong. Notes below answers say what was and was not checked.
 - Interview scores measure keyword/key-point coverage plus an AI check of the missed points. They are not an expert's grade.
-- Local SQLite and a single-user dev setup; no rate limiting, no password reset, no email verification.
+- SQLite by default. AI requests have optional usage limits kept in memory (reset on restart, not shared between processes); no login rate limiting, password reset or email verification.
 - Sessions use `sessionStorage` JWTs and the UI has no mobile layout work.
 
 ## Roadmap
 
 - Verified catalog entries and sources, more interview and error entries written from real experience
-- Deployment (Docker image with frontend, hosted database)
+- Hosted demo link (Render + Neon + static frontend, see Deploy)

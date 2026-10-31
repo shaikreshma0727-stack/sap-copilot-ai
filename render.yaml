@@ -1,0 +1,30 @@
+# Render Blueprint for the free-tier demo backend.
+# Secrets are NOT stored here: DATABASE_URL, GROQ_API_KEY and FRONTEND_ORIGIN are asked for in the Render dashboard.
+services:
+  - type: web
+    name: sap-copilot-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: RAG_ENABLED
+        value: "false"
+      - key: ABAPLINT_ENABLED
+        value: "false"
+      - key: AI_LIMIT_PER_HOUR
+        value: "15"
+      - key: AI_LIMIT_PER_DAY
+        value: "300"

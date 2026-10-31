@@ -3,9 +3,9 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from app.config import get_settings
 from app.deps import get_current_user
 from app.models import User
-from app.rag.service import get_retriever
 
 router = APIRouter(prefix="/kb", tags=["knowledge-base"])
 
@@ -31,8 +31,12 @@ def search(
     _: User = Depends(get_current_user),
 ):
     """Search the SAP knowledge base. Optional filters narrow results by metadata."""
+    if not get_settings().rag_enabled:
+        raise HTTPException(status_code=503, detail="Knowledge base search is switched off on this server (RAG_ENABLED=false).")
     filters = {"module": module, "technology": technology, "object_type": object_type, "source": source}
     try:
+        from app.rag.service import get_retriever  # lazy: the slim demo image has no RAG packages
+
         hits = get_retriever().search(q, k=k, mode=mode, filters=filters)
     except Exception as exc:  # e.g. embedding model could not be downloaded
         raise HTTPException(status_code=503, detail=f"Knowledge base unavailable: {exc}") from exc

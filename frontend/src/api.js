@@ -110,3 +110,17 @@ export function reviewCode(code, token) {
     token
   );
 }
+
+// Used by the login page to detect a sleeping free-tier server. Resolves true when /health answers.
+export async function pingServer(timeoutMs = 75000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${API_URL}/health`, { signal: controller.signal });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}

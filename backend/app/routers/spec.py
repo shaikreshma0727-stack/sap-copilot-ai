@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from app.ai_gate import ai_gate
 from app.deps import get_current_user
 from app.models import User
 from app.spec import checklist
@@ -33,7 +34,7 @@ class GenerateOut(BaseModel):
     note: str
 
 
-@router.post("/generate", response_model=GenerateOut)
+@router.post("/generate", response_model=GenerateOut, dependencies=[Depends(ai_gate)])
 def generate(payload: GenerateRequest, _: User = Depends(get_current_user)):
     text = payload.fs_text.strip()
     topics = checklist.evaluate(text)
@@ -45,7 +46,7 @@ def generate(payload: GenerateRequest, _: User = Depends(get_current_user)):
     if any(o["status"] == "unverified" for o in detected["catalog_objects"]):
         notes.append("Catalog objects found are unverified general knowledge; confirm names in SE11/SE37.")
     if draft is None:
-        notes.append("The AI draft is not available (no LLM key or the call failed); the topic check and detected objects are still shown.")
+        notes.append("The AI draft is not available (no LLM key, the usage limit was reached, or the call failed); the topic check and detected objects are still shown.")
     else:
         notes.append("The draft can be wrong or incomplete. Review every table, field and rule against the FS and your system, and take the Open questions to the functional consultant.")
     return GenerateOut(

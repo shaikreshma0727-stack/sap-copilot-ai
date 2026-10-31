@@ -5,6 +5,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from app.ai_gate import ai_gate
 from app.deps import get_current_user
 from app.errors import explain as explain_mod
 from app.errors.parser import MAX_INPUT_CHARS, parse
@@ -35,7 +36,7 @@ class AnalyzeOut(BaseModel):
     note: str
 
 
-@router.post("/analyze", response_model=AnalyzeOut)
+@router.post("/analyze", response_model=AnalyzeOut, dependencies=[Depends(ai_gate)])
 def analyze(payload: AnalyzeRequest, _: User = Depends(get_current_user)):
     text = payload.text.strip()
     parsed = parse(text)
@@ -48,7 +49,7 @@ def analyze(payload: AnalyzeRequest, _: User = Depends(get_current_user)):
     elif any(e.status == "unverified" for e in entries):
         notes.append("Matched entries are general SAP knowledge written by the assistant and not yet verified against SAP documentation.")
     if explanation is None:
-        notes.append("AI explanation is not available (no LLM key or the call failed); only the extracted facts and matched entries are shown.")
+        notes.append("AI explanation is not available (no LLM key, the usage limit was reached, or the call failed); only the extracted facts and matched entries are shown.")
     else:
         notes.append("The AI explanation can be wrong. Check it against the dump itself and your system before acting.")
 

@@ -5,6 +5,7 @@ import re
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from app.ai_gate import ai_gate
 from app.deps import get_current_user
 from app.models import User
 from app.quality import abaplint_check
@@ -50,7 +51,7 @@ def _clean(code: str) -> str:
     return (m.group(2) if m else code).strip("\n")
 
 
-@router.post("/code", response_model=ReviewOut)
+@router.post("/code", response_model=ReviewOut, dependencies=[Depends(ai_gate)])
 def review_code(payload: ReviewRequest, _: User = Depends(get_current_user)):
     code = _clean(payload.code)
     findings = [f.as_dict() for f in run_rules(code)]
@@ -64,7 +65,7 @@ def review_code(payload: ReviewRequest, _: User = Depends(get_current_user)):
     if issues is None:
         notes.append("The abaplint syntax check is not installed here, so grammar and declaration errors were not checked.")
     if ai is None:
-        notes.append("The AI review is not available (no LLM key or the call failed); the rule findings are still shown.")
+        notes.append("The AI review is not available (no LLM key, the usage limit was reached, or the call failed); the rule findings are still shown.")
     else:
         notes.append("The AI review can be wrong. Check each point against the code.")
     return ReviewOut(

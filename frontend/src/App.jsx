@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getHistory, login, register, sendMessage } from "./api.js";
+import { getHistory, login, pingServer, register, sendMessage } from "./api.js";
 import CodeReview from "./CodeReview.jsx";
 import ErrorAnalyzer from "./ErrorAnalyzer.jsx";
 import SpecGenerator from "./SpecGenerator.jsx";
@@ -11,6 +11,32 @@ const AGENT_LABELS = {
   functional: "Functional Agent",
   learning: "Learning Agent",
 };
+
+// Free hosting sleeps when idle. Shows a notice while the first request wakes the server up.
+function ServerStatus() {
+  const [state, setState] = useState("checking");
+  const [slow, setSlow] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    const timer = setTimeout(() => alive && setSlow(true), 2500);
+    pingServer().then((ok) => {
+      if (alive) setState(ok ? "up" : "down");
+    });
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  if (state === "up") return null;
+  if (state === "down") {
+    return <div className="notice warn">The server could not be reached. Please try again in a minute.</div>;
+  }
+  return slow ? (
+    <div className="notice">The free demo server was asleep and is starting now. This can take up to a minute.</div>
+  ) : null;
+}
 
 function AuthForm({ onLoggedIn }) {
   const [mode, setMode] = useState("login");
@@ -51,6 +77,10 @@ function AuthForm({ onLoggedIn }) {
         minLength={8}
         required
       />
+      <ServerStatus />
+      <p className="fineprint">
+        Demo: chats and answers are stored on the server. Please do not enter confidential or client data. AI use is limited.
+      </p>
       {error && <div className="error">{error}</div>}
       <button type="submit" disabled={busy}>
         {busy ? "Please wait..." : mode === "login" ? "Log in" : "Create account"}

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.ai_gate import ai_gate
 from app.database import get_db
 from app.deps import get_current_user
 from app.interview import judge as judge_mod
@@ -80,7 +81,7 @@ def next_question(payload: QuestionRequest, db: Session = Depends(get_db), user:
     return QuestionOut(id=q.id, topic=q.topic, level=q.level, question=q.question, key_point_count=len(q.key_points))
 
 
-@router.post("/answer", response_model=AnswerOut)
+@router.post("/answer", response_model=AnswerOut, dependencies=[Depends(ai_gate)])
 def answer(payload: AnswerRequest, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     q = get_bank().get(payload.question_id.strip().lower())
     if q is None:
@@ -95,7 +96,7 @@ def answer(payload: AnswerRequest, db: Session = Depends(get_db), user: User = D
             ev = add_ai_coverage(q, ev, j.also_covered)
             feedback = j.feedback
         else:
-            feedback = "AI feedback is not available right now (no LLM key or the call failed); the score below uses keyword matching only."
+            feedback = "AI feedback is not available right now (no LLM key, the usage limit was reached, or the call failed); the score below uses keyword matching only."
     db.add(
         InterviewAttempt(
             user_id=user.id, question_id=q.id, topic=q.topic, level=q.level, answer=payload.answer, score=ev.score

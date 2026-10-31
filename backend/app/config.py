@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,6 +38,19 @@ class Settings(BaseSettings):
     interview_dir: str = ""
     # Error analyzer: knowledge folder. Empty = <kb_dir>/errors.
     errors_dir: str = ""
+
+    # Hosted demo: usage limits for AI calls (0 = no limit). Counted per request, kept in memory.
+    ai_limit_per_hour: int = 0  # per user
+    ai_limit_per_day: int = 0  # for the whole server, per UTC day
+
+    @field_validator("database_url")
+    @classmethod
+    def _use_psycopg2_driver(cls, v: str) -> str:
+        """Neon, Render and Heroku hand out postgres:// or postgresql:// URLs; SQLAlchemy needs a driver name."""
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg2://" + v[len(prefix):]
+        return v
 
 
 @lru_cache

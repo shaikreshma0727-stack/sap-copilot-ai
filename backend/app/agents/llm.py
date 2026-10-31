@@ -3,6 +3,7 @@ still run without any external service."""
 
 from functools import lru_cache
 
+from app.aibudget import ai_allowed
 from app.config import get_settings
 
 
@@ -23,7 +24,9 @@ def get_llm():
 
 
 def ask_llm(system_prompt: str, user_message: str) -> str | None:
-    """Call the LLM. Returns None if no key is set or the call fails."""
+    """Call the LLM. Returns None if no key is set, the usage limit is reached or the call fails."""
+    if not ai_allowed():
+        return None
     llm = get_llm()
     if llm is None:
         return None

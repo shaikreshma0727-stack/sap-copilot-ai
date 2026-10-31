@@ -15,7 +15,9 @@ services:
       retries: 10
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     env_file: .env
     environment:
       DATABASE_URL: postgresql+psycopg2://sapcopilot:sapcopilot@db:5432/sapcopilot
